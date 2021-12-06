@@ -2,27 +2,30 @@ import os
 from PIL import Image
 
 _filename = "input.txt"
-_map_file = "map.txt"
-_image_file = "image.png"
+_image_file = "image.gif"
+
+_images=[]
 
 def main():
+
+    print("Generating Map...\n")
+
     coordinates = load_data()
     base_map = init_map(coordinates)
     vent_map = generate_vent_map(coordinates, base_map)
+    print("Counting Overlap...\n")
     overlap_count = count_overlap(vent_map)
-    # draw_map(base_map) # Don't do this if the map is super large
-    write_map_to_file(vent_map)
-    draw_image(vent_map)
+    print("Generating Gif...\n")
+    save_gif()
 
     print(f"{get_max_xy(coordinates)}")
 
-    print(f"It overlapped {overlap_count} times")
+    print("Gif location: " + _image_file + "\n")
+    print(f"Paths overlapped {overlap_count} times")
 
-def draw_image(vent_map):
+def add_image(vent_map):
     y_size = len(vent_map)
     x_size = len(vent_map[0])
-    script_path = os.path.dirname(os.path.abspath(__file__))
-    filepath = os.path.join(script_path, _image_file)
 
     img = Image.new("RGB", (x_size, y_size), color="black")
     pixels = img.load()
@@ -43,7 +46,21 @@ def draw_image(vent_map):
                     color = (255, 0, 0)
             
             pixels[space_idx, line_idx] = color
-    img.save(filepath)
+
+    global _images
+    _images.append(img)
+
+
+def save_gif():
+    script_path = os.path.dirname(os.path.abspath(__file__))
+    filepath = os.path.join(script_path, _image_file)
+    try:
+        os.remove(filepath)
+    except FileNotFoundError:
+        print("Map File not found. Creating it...")
+
+    global _images
+    _images[0].save(filepath, save_all=True, append_images=_images[1:], optimize=False, duration=40, loop=1)
 
 
 
@@ -67,7 +84,10 @@ def init_map(coordinates):
     return point_map
 
 def generate_vent_map(coordinates, map):
+    num = 0
     for coord in coordinates:
+        num += 1
+        print(f"\rprogress: {num}/{len(coordinates)}", end='\r')
         # if x == x, then movement is y
         if coord[0][0] == coord[1][0]:
             min_range = min(coord[0][1], coord[1][1])
@@ -79,7 +99,6 @@ def generate_vent_map(coordinates, map):
                     map[i][coord[0][0]] += 1
 
         elif coord[0][1] == coord[1][1]:
-            print()
             min_range = min(coord[0][0], coord[1][0])
             max_range = max(coord[0][0], coord[1][0])
             for i in range(min_range, max_range+1):
@@ -109,37 +128,15 @@ def generate_vent_map(coordinates, map):
                     map[y][x] = 1
                 else:
                     map[y][x] += 1
-                map[y][x] 
 
                 if x == dest_x and y == dest_y:
                     break
 
                 x += x_movement
                 y += y_movement
+        add_image(map)
 
     return map
-
-
-def draw_map(vent_map):
-    for row in vent_map:
-        for cell in row:
-            print(str(cell) + " ", end='')
-        print("\n", end='')
-
-def write_map_to_file(vent_map):
-    script_path = os.path.dirname(os.path.abspath(__file__))
-    filepath = os.path.join(script_path, _map_file)
-
-    try:
-        os.remove(filepath)
-    except FileNotFoundError:
-        print("Map File not found. Creating it...")
-
-    with open(filepath, "w") as f:
-        for row in vent_map:
-            for cell in row:
-                f.write(str(cell) + " ")
-            f.write("\n")
 
 
 def get_max_xy(coordinates):
