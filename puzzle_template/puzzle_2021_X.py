@@ -3,7 +3,7 @@ import os
 _filename = "example_input.txt"
 
 def main():
-    print("Day 7: The Treachery of Whales")
+    print("\nDay 7: The Treachery of Whales")
     print("==============================")
 
     print(f"\nThe answer is {1}")
