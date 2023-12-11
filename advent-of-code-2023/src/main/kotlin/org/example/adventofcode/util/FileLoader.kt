@@ -1,6 +1,7 @@
 package org.example.adventofcode.util
 
 import java.util.stream.Collectors
+import kotlin.streams.toList
 
 @Suppress("UNCHECKED_CAST")
 object FileLoader {
@@ -13,5 +14,15 @@ object FileLoader {
             String::class -> fileText.lines() as List<T>
             else -> fileText.lines() as List<T> // Default is treated like strings
         }
+    }
+
+    fun loadCharGridFromFile(filePath: String): List<List<Char>> {
+        val fileLines = loadFromFile<String>(filePath)
+        val grid = mutableListOf<List<Char>>()
+        fileLines.forEachIndexed { yIdx, string ->
+            val row = string.toList()
+            grid.add(row)
+        }
+        return grid
     }
 }
