@@ -2,35 +2,38 @@ package org.example.adventofcode.puzzle
 
 import org.example.adventofcode.util.FileLoader
 import java.lang.IllegalArgumentException
-import kotlin.math.abs
 
 object Day10 {
     fun part1(filePath: String): Int {
         val fileLines = FileLoader.loadFromFile<String>(filePath)
-        val map = initializeMap(fileLines)
-        val startingNode = findCharInMap('S', map)
-        val endMap = calcGridDistances(map, startingNode)
-        return endMap.maxOf { it.maxOf { it.tentativeDistanceValue } }
+        val grid = buildGrid(fileLines)
+        return grid.maxOf { it.maxOf { it.tentativeDistanceValue } }
     }
 
     fun part2(filePath: String): Int {
         val fileLines = FileLoader.loadFromFile<String>(filePath)
-        return countWithin(fileLines)
+        val grid = buildGrid(fileLines)
+        val pipePositions = getPipePositions(grid)
+        return countInsideSpaces(pipePositions, grid)
     }
 
-    private fun countWithin(fileLines: List<String>): Int {
+    private fun countInsideSpaces(pipePositions: Set<Position>, grid: Grid): Int {
+        // Looked for some reddit help on this part. Took me a minute to grasp but, if you imagine
+        // going through the top half of each "cell" (letter) then these are all vertical walls.
+        // then if we go over each point in the entire grid, and can determine that we crossed a boundary
+        // we can then say we are "inside". If the current position is NOT in the loop and inside is marked, then we can count it as
+        // an "inside" cell.
+        // SIDE NOTE: Point in polygon is where I failed AoC last year. Took this one as a learning opportunity :D
         val pipes = "|LJ"
         var count = 0
-        val map = fileLines.map { it.toCharArray().toList() }
-        val loop = getLoop(map)
 
-        for (y in map.indices) {
+        for (y in grid.indices) {
             var inside = false
-            for (x in map.first().indices) {
-                if (Position(x, y) in loop && map[y][x] in pipes) {
+            for (x in grid.first().indices) {
+                if (Position(x, y) in pipePositions && grid[y][x].char in pipes) {
                     inside = !inside
                 }
-                if (Position(x, y) !in loop && inside) {
+                if (Position(x, y) !in pipePositions && inside) {
                     count++
                 }
             }
@@ -39,50 +42,21 @@ object Day10 {
         return count
     }
 
-    private fun getLoop(grid: List<List<Char>>): Set<Position> {
-        var start = Position(0, 0)
-        for (y in grid.indices) {
-            for (x in grid[y].indices) {
-                if (grid[y][x] == 'S') {
-                    start = Position(x, y)
+    private fun getPipePositions(grid: Grid): Set<Position> {
+        val pipeLoop = hashSetOf<Position>()
+        for(y in grid.indices) {
+            for(x in grid.first().indices) {
+                if(grid[y][x].tentativeDistanceValue != -1) {
+                    pipeLoop.add(grid[y][x].position)
                 }
             }
         }
-
-        val toVisit = ArrayDeque(listOf(start))
-        val visited = mutableSetOf(start)
-
-        while (toVisit.isNotEmpty()) {
-            val current = toVisit.removeLast()
-            current.validNeighbours(grid)
-                .filter { n -> current.isConnected(grid, n) && n !in visited }
-                .forEach { n ->
-                    toVisit.add(n)
-                    visited.add(n)
-                }
-        }
-
-        return visited
+        return pipeLoop
     }
 
-    private fun Position.validNeighbours(map: List<List<Char>>) = neighbours().filter { it.y in map.indices && it.x in map.first().indices }
-
-    private fun Position.isConnected(map: List<List<Char>>, other: Position): Boolean {
-        return when {
-            map[y][x] == 'S' -> other.isConnected(map, this)
-            map[y][x] == '|' -> other.x == x && abs(other.y - y) == 1
-            map[y][x] == '-' -> other.y == y && abs(other.x - x) == 1
-            map[y][x] == 'L' -> (other.y == y - 1 && other.x == x) || (other.x == x + 1 && other.y == y)
-            map[y][x] == 'J' -> (other.y == y - 1 && other.x == x) || (other.x == x - 1 && other.y == y)
-            map[y][x] == '7' -> (other.y == y + 1 && other.x == x) || (other.x == x - 1 && other.y == y)
-            map[y][x] == 'F' -> (other.y == y + 1 && other.x == x) || (other.x == x + 1 && other.y == y)
-            else              -> false
-        }
-    }
-
-    private fun initializeUnvisitedNodes(map: List<List<Node>>): ArrayList<Node> {
+    private fun initializeUnvisitedNodes(grid: Grid): ArrayList<Node> {
         val unvisitedNodes = ArrayList<Node>()
-        for (row in map) {
+        for (row in grid) {
             for (node in row) {
                 unvisitedNodes.add(node)
             }
@@ -90,10 +64,10 @@ object Day10 {
         return unvisitedNodes
     }
 
-    private fun findCharInMap(char: Char, map: ArrayList<ArrayList<Node>>): Node {
-        for (row in map) {
+    private fun findStartingPoint(grid: Grid): Node {
+        for (row in grid) {
             for (node in row) {
-                if(node.char == char) {
+                if(node.char == 'S') {
                     return node
                 }
             }
@@ -101,21 +75,23 @@ object Day10 {
         throw IllegalArgumentException("Map must contain a starting position")
     }
 
-    private fun initializeMap(lines: List<String>): ArrayList<ArrayList<Node>> {
-        val map = ArrayList<ArrayList<Node>>()
+    private fun initializeMap(lines: List<String>): Grid {
+        val grid = ArrayList<ArrayList<Node>>()
 
         for (y in lines.indices) {
             val row = ArrayList<Node>()
             for (x in lines[y].indices) {
                 row.add(Node(Position(x, y), tentativeDistanceValue = -1, char = lines[y][x])) // using -1 to signify unset
             }
-            map.add(row)
+            grid.add(row)
         }
 
-        return map
+        return grid
     }
 
-    private fun calcGridDistances(map: List<List<Node>>, startingNode: Node): List<List<Node>> {
+    private fun buildGrid(fileLines: List<String>): Grid {
+        val map = initializeMap(fileLines)
+        val startingNode = findStartingPoint(map)
         val unvisitedNodes = initializeUnvisitedNodes(map)
 
         //initialize starting node distance to zero
@@ -149,23 +125,6 @@ object Day10 {
         return map
     }
 
-    fun printGridDistances(map: List<List<Node>>, delimiter: String = " ") {
-        for (row in map) {
-            for (node in row) {
-                print(node.tentativeDistanceValue.toString() + delimiter)
-            }
-            println()
-        }
-    }
-    fun printGrid(map: List<List<Node>>, delimiter: String = " ") {
-        for (row in map) {
-            for (node in row) {
-            print(node.char.toString() + delimiter)
-            }
-            println()
-        }
-    }
-
     private fun getViableNeighbors(currentNode: Node, map: List<List<Node>>): ArrayList<Node> {
         val neighbors = ArrayList<Node>()
         if(currentNode.position.y > 0 && canGoUp(currentNode.char, map[currentNode.position.y-1][currentNode.position.x].char)) {
@@ -192,16 +151,7 @@ object Day10 {
 data class Position(
     val x: Int,
     val y: Int
-) {
-    fun neighbours(): List<Position> {
-        return listOf(
-            Position(x - 1, y),
-            Position(x + 1, y),
-            Position(x, y - 1),
-            Position(x, y + 1),
-        )
-    }
-}
+)
 
 data class Node(
     val position: Position,
@@ -209,11 +159,13 @@ data class Node(
     val char: Char
 )
 
-fun main() {
-//    println("Part 1 example solution is: ${Day10.part1("/day10_example.txt")}")
-//    println("Part 1 example 2 solution is: ${Day10.part1("/day10_example2.txt")}")
-//    println("Part 1 main solution is: ${Day10.part1("/day10.txt")}")
+typealias Grid = List<List<Node>>
 
+fun main() {
+    println("Part 1 example solution is: ${Day10.part1("/day10_example.txt")}")
+    println("Part 1 example 2 solution is: ${Day10.part1("/day10_example2.txt")}")
+    println("Part 1 main solution is: ${Day10.part1("/day10.txt")}")
+    println()
     println("Part 2 example solution is: ${Day10.part2("/day10p2_example.txt")}")
     println("Part 2 example 2 solution is: ${Day10.part2("/day10p2_example2.txt")}")
     println("Part 2 example 3 solution is: ${Day10.part2("/day10p2_example3.txt")}")
