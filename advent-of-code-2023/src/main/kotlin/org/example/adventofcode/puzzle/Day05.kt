@@ -1,16 +1,16 @@
 package org.example.adventofcode.puzzle
 
-import org.example.adventofcode.util.FileLoader
+import org.example.adventofcode.util.Utils
 
 object Day05 {
     fun part1(filePath: String): Long {
-        val fileLines = FileLoader.loadFromFile<String>(filePath)
+        val fileLines = Utils.loadFromFile<String>(filePath)
         val almanac = parseInput(fileLines)
         return processSeeds(almanac).minOf { it.locationNumber }
     }
 
     fun part2(filePath: String): Long {
-        val fileLines = FileLoader.loadFromFile<String>(filePath)
+        val fileLines = Utils.loadFromFile<String>(filePath)
         val almanac = parseInput(fileLines)
 
         var locationNumberToCheck = 0L

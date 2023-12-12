@@ -1,17 +1,17 @@
 package org.example.adventofcode.puzzle
 
-import org.example.adventofcode.util.FileLoader
+import org.example.adventofcode.util.Utils
 
 object Day06 {
     fun part1(filePath: String): Long {
-        val fileLines = FileLoader.loadFromFile<String>(filePath)
+        val fileLines = Utils.loadFromFile<String>(filePath)
         return parseRaces(fileLines).map {
             findWaysToWin(it.first, it.second)
         }.reduce { acc, numWaysToWin -> acc * numWaysToWin }
     }
 
     fun part2(filePath: String): Long {
-        val fileLines = FileLoader.loadFromFile<String>(filePath)
+        val fileLines = Utils.loadFromFile<String>(filePath)
         val (time, distance) = parsePart2(fileLines)
         return findWaysToWin(time, distance)
     }

@@ -1,18 +1,18 @@
 package org.example.adventofcode.puzzle
 
-import org.example.adventofcode.util.FileLoader
+import org.example.adventofcode.util.Utils
 
 object Day02 {
     /* ---------- PARTS ---------- */
     fun part1(filePath: String): Int {
-        val fileLines = FileLoader.loadFromFile<String>(filePath)
+        val fileLines = Utils.loadFromFile<String>(filePath)
         return fileLines
             .map { parseGameFromString(it) }
             .filter { isGamePossible(it) }
             .sumOf { it.id }
     }
     fun part2(filePath: String): Int {
-        val fileLines = FileLoader.loadFromFile<String>(filePath)
+        val fileLines = Utils.loadFromFile<String>(filePath)
         return fileLines
             .map { parseGameFromString(it) }
             .map { findMinCubeCountToMakeGamePossible(it) }

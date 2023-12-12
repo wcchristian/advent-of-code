@@ -1,6 +1,6 @@
 package org.example.adventofcode.puzzle
 
-import org.example.adventofcode.util.FileLoader
+import org.example.adventofcode.util.Utils
 
 val numberMap = mapOf(
     "one"   to "1",
@@ -16,7 +16,7 @@ val numberMap = mapOf(
 
 object Day01 {
     fun part1(filePath: String): Int {
-        val fileLines = FileLoader.loadFromFile<String>(filePath)
+        val fileLines = Utils.loadFromFile<String>(filePath)
         return fileLines.sumOf {
             val matchIterator = Regex("(\\d)").findAll(it.lowercase())
             (matchIterator.first().groupValues[0] + matchIterator.last().groupValues[0]).toInt()
@@ -29,7 +29,7 @@ object Day01 {
     // Took quite a bit of time to get this figured out, oof. Fun first day.
     // ¯\_(ツ)_/¯
     fun part2(filePath: String): Int {
-        val fileLines = FileLoader.loadFromFile<String>(filePath)
+        val fileLines = Utils.loadFromFile<String>(filePath)
         return fileLines.sumOf {
             val firstMatch = Regex("(\\d|one|two|three|four|five|six|seven|eight|nine)").find(it.lowercase())!!
             val lastMatch = Regex("(\\d|eno|owt|eerht|ruof|evif|xis|neves|thgie|enin)").find(it.lowercase().reversed())!!

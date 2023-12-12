@@ -1,15 +1,15 @@
 package org.example.adventofcode.puzzle
 
-import org.example.adventofcode.util.FileLoader
+import org.example.adventofcode.util.Utils
 
 object Day00 {
     fun part1(filePath: String): Int {
-        val fileLines = FileLoader.loadFromFile<String>(filePath)
+        val fileLines = Utils.loadFromFile<String>(filePath)
         return 1
     }
 
     fun part2(filePath: String): Int {
-        val fileLines = FileLoader.loadFromFile<String>(filePath)
+        val fileLines = Utils.loadFromFile<String>(filePath)
         return 1
     }
 }

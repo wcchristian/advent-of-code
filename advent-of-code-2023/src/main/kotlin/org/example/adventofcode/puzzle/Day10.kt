@@ -1,17 +1,17 @@
 package org.example.adventofcode.puzzle
 
-import org.example.adventofcode.util.FileLoader
+import org.example.adventofcode.util.Utils
 import java.lang.IllegalArgumentException
 
 object Day10 {
     fun part1(filePath: String): Int {
-        val fileLines = FileLoader.loadFromFile<String>(filePath)
+        val fileLines = Utils.loadFromFile<String>(filePath)
         val grid = buildGrid(fileLines)
         return grid.maxOf { it.maxOf { it.tentativeDistanceValue } }
     }
 
     fun part2(filePath: String): Int {
-        val fileLines = FileLoader.loadFromFile<String>(filePath)
+        val fileLines = Utils.loadFromFile<String>(filePath)
         val grid = buildGrid(fileLines)
         val pipePositions = getPipePositions(grid)
         return countInsideSpaces(pipePositions, grid)

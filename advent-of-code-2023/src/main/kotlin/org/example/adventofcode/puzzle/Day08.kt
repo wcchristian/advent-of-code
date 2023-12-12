@@ -1,17 +1,17 @@
 package org.example.adventofcode.puzzle
 
-import org.example.adventofcode.util.FileLoader
+import org.example.adventofcode.util.Utils
 import java.util.function.Predicate
 
 object Day08 {
     fun part1(filePath: String): Long {
-        val fileLines = FileLoader.loadFromFile<String>(filePath)
+        val fileLines = Utils.loadFromFile<String>(filePath)
         val nodeMap = loadMap(fileLines)
         return walkMap(nodeMap, { it == "AAA" }, {it != "ZZZ"})
     }
 
     fun part2(filePath: String): Long {
-        val fileLines = FileLoader.loadFromFile<String>(filePath)
+        val fileLines = Utils.loadFromFile<String>(filePath)
         val nodeMap = loadMap(fileLines)
         return ghostWalkMap(nodeMap)
     }

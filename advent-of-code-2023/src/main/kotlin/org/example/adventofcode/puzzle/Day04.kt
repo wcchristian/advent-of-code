@@ -1,18 +1,18 @@
 package org.example.adventofcode.puzzle
 
-import org.example.adventofcode.util.FileLoader
+import org.example.adventofcode.util.Utils
 import kotlin.math.pow
 
 object Day04 {
     fun part1(filePath: String): Long {
-        val fileLines = FileLoader.loadFromFile<String>(filePath)
+        val fileLines = Utils.loadFromFile<String>(filePath)
         return fileLines.map {
             parseCard(it)
         }.sumOf(Card::calculatePoints)
     }
 
     fun part2(filePath: String): Long {
-        val fileLines = FileLoader.loadFromFile<String>(filePath)
+        val fileLines = Utils.loadFromFile<String>(filePath)
         val cards = fileLines.map {
             parseCard(it)
         }
