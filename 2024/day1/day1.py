@@ -2,8 +2,8 @@ import os
 import re
 
 def main():
-    filename = "day0_input.txt"
-    example_filename = "day0_example.txt"
+    filename = "day1_input.txt"
+    example_filename = "day1_example.txt"
 
     print(f'Part 1 Example: {part1(example_filename)}')
     print(f'Part 1: {part1(filename)}')
@@ -13,20 +13,12 @@ def main():
 
 def part1(filename):
     list_one, list_two = read_input(filename)
-    diff_list = [abs(list_one[i] - list_two[i]) for i in range(0, len(list_one))]
-    return sum(diff_list)
+    return sum([abs(list_one[i] - list_two[i]) for i in range(0, len(list_one))])
 
 
 def part2(filename):
     list_one, list_two = read_input(filename)
-    overall_score = 0
-
-    for idx in range(0, len(list_one)):
-        num = list_one[idx]
-        times_in_list_two = len([x for x in list_two if x == num])
-        overall_score += (num * times_in_list_two)
-
-    return overall_score
+    return sum([list_one[idx] * len([x for x in list_two if x == list_one[idx]]) for idx in range(0, len(list_one))])
 
 
 def read_input(filename):
