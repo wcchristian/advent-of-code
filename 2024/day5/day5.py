@@ -52,7 +52,6 @@ def is_update_valid(ordering_tuples, update):
     return True
 
 def order_updates(ordering_tuples, updates):
-
     fixed_updates = []
     for update in updates:
         fixed_updates.append(fix_update(ordering_tuples, update))
