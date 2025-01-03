@@ -1,3 +1,4 @@
+from operator import contains
 import os
 import re
 from tqdm import tqdm
@@ -8,7 +9,7 @@ def main():
 
     # print(f'Part 1 Example: {part1(example_filename)}')
     # print(f'Part 1: {part1(filename)}')
-    print(f'Part 2 Example: {part2_2(example_filename)}')
+    print(f'Part 2 Example: {part2(example_filename)}')
     print(f'Part 2: {part2_2(filename)}')
     
 
@@ -45,74 +46,31 @@ def part1(filename):
 def part2(filename):
     line = read_input(filename)
     visual_list, max_id = translate_line_to_visual_list(line)
+    chunked_list = visual_list_to_chunked_list(visual_list)
     current_id_to_move = max_id
 
-    for i in tqdm(range(len(visual_list))):
-        if visual_list[i] == '.':
+    for source_chunk in reversed(chunked_list):
+        dot_chunks = [x for x in chunked_list if re.match(r"\.*", x)]
 
-            # find how many spaces I have
-            num_dot_spaces = 0
-            for j in range(len(visual_list[i:])):
-                if visual_list[i:][j] != '.':
-                    break
-                num_dot_spaces += 1
+        #TODO: I think this process will work. But there is a problem below
+        # when I try and assign things back to the string because "Strings don;t
+        # Support Item Assignment."
 
-            # Probably need to loop this over the end until I reach the number I'm
-            # currently at??
-            for x in reversed(range(0, current_id_to_move+1)):
-                # find the left most chunk that can fit there
-                starting_idx = visual_list.index(str(x))
-                if starting_idx <= i:
-                    break
-                num_num_spaces = 0
-                for j in range(len(visual_list[starting_idx:])):
-                    if visual_list[starting_idx:][j] != str(x):
-                        break
-                    num_num_spaces += 1
+        # If chunk is numbers only. (IF IS A FILE)
+        for destination_chunk in chunked_list:
+            # check if the destination_chunk contains dots.
+            if re.match(r"\.*", destination_chunk):
+                # count the dots
+                dot_count = len (re.findall(r"\.", destination_chunk))
 
-                if(num_dot_spaces >= num_num_spaces):
-                    for j in range(i, i+num_dot_spaces):
-                        visual_list[j] = x
-                    for j in range(starting_idx, starting_idx+num_num_spaces):
-                        visual_list[j] = "."
-                current_id_to_move -= 1
+                # If it has room for the source_chunk
+                if len(source_chunk) <= dot_count:
+                    dot_start_index = destination_chunk.index('.')
+                    for x in range(dot_start_index, dot_count + dot_start_index + 1):
+                        destination_chunk[x] = source_chunk[x - (dot_start_index)]
+                        source_chunk[x - (dot_start_index)] = "."
 
     return calc_checksum(visual_list) 
-
-
-def part2_2(filename):
-    line = read_input(filename)
-    visual_list = "".join(translate_line_to_visual_list(line)[0])
-    dot_array = [x for x in re.split(r'\d', visual_list) if x != '']
-    numarray = "".join([x for x in re.split(r'\.', visual_list) if x != ''])
-
-
-    num_array = []
-    current_string = ''
-    current_digit = '0'
-    for i in range(len(numarray)):
-        if(current_digit != numarray[i]):
-            num_array.append(current_string)
-            current_digit = numarray[i]
-            current_string = ''
-        current_string += numarray[i]
-    num_array.append(current_string)
-
-
-
-    for i in range(len(dot_array)):
-        for j in reversed(range(len(num_array))):
-            left_over = len("".join([x for x in re.split(r'\d', dot_array[i]) if x != ''])) - len(num_array[j])
-            if left_over >= 0 and len([x for x in dot_array[i].split(".")]) == 0:
-                dot_array[i] = num_array[j] + ('.' * left_over)
-            elif left_over >= 0:
-                index_where_dots_start = dot_array.index(".")
-                dot_array[i] = dot_array[i][:index_where_dots_start] + num_array[j] + ('.' * left_over)
-
-
-
-
-    print("foo")
 
 
 def calc_checksum(list):
@@ -141,6 +99,20 @@ def translate_line_to_visual_list(line):
 
     return result_list, current_id - 1
 
+def visual_list_to_chunked_list(visual_list):
+    chunked_list = []
+    tmp_str = ""
+    prev_char = visual_list[0]
+    for char in visual_list[1:]:
+        if prev_char == char and (len(tmp_str) == 0 or tmp_str[0] == char):
+            tmp_str += char
+        else:
+            chunked_list.append(tmp_str)
+            prev_char = char
+            tmp_str = "" + char
+
+    chunked_list.append(tmp_str)
+    return chunked_list
 
 
 def replace_fragment(line, fragment, index_to_replace):
