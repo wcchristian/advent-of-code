@@ -1,2 +1,8 @@
 .idea/
 .vscode/
+
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
