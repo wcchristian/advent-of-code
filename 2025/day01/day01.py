@@ -2,8 +2,8 @@ from pathlib import Path
 from math import floor
 
 def main():
-    filename = "day1_input.txt"
-    example_filename = "day1_example.txt"
+    filename = "day01_input.txt"
+    example_filename = "day01_example.txt"
 
     print(f'Part 1 Example: {part1(example_filename)}')
     print(f'Part 1: {part1(filename)}')
@@ -63,7 +63,7 @@ def part2(filename):
 
 
 
-
+# Read the file in this directory given a file name
 def read_file(filename):
     path = Path(__file__).parent / filename
     with open(path, 'r') as f:
@@ -73,9 +73,4 @@ def read_file(filename):
 if __name__ == "__main__":
     main()
 
-
-#     advent-of-code/2025/day1/day1.py
-# Part 1 Example: 3
-# Part 1: 1139
-# Part 2 Example: 6
-# Part 2: 6684
+    
