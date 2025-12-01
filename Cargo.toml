@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "2025/day*/day*",
+]
+resolver = "2"
