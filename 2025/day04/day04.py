@@ -14,35 +14,16 @@ def main():
 
 def part1(filename: str):
     grid = read_file(filename)
-    forkliftable = []
-
-    for y in range(len(grid)):
-        for x in range(len(grid[y])):
-            if(grid[y][x] == "@"):
-                neighbors = find_neighbors(y, x, grid)
-
-                if list(neighbors.values()).count("@") < 4:
-                    forkliftable.append((y, x))
-
-    return len(forkliftable)
+    return count_moved(move_tp(grid))
 
 
 def part2(filename: str):
     grid = read_file(filename)
-
-    new_grid = move_tp(grid, True)
-
-    moved_count = 0
-    for line in new_grid:
-        for c in line:
-            if c == "x":
-                moved_count += 1
-
-    return moved_count
+    return count_moved(move_tp(grid, True))
 
 
 def move_tp(grid, recur = False):
-    forkliftable = []
+    forkliftable = 0
     new_grid = copy.deepcopy(grid)
 
     for y in range(len(grid)):
@@ -52,15 +33,25 @@ def move_tp(grid, recur = False):
 
                 if list(neighbors.values()).count("@") < 4:
                     new_grid[y][x] = 'x'
-                    forkliftable.append((y, x))
+                    forkliftable += 1
 
 
-    if len(forkliftable) <= 0:
+    if forkliftable <= 0:
         return new_grid
     elif recur:
         return move_tp(new_grid, True)
     else:
         return new_grid
+
+
+def count_moved(grid):
+    moved_count = 0
+    for line in grid:
+        for c in line:
+            if c == "x":
+                moved_count += 1
+
+    return moved_count
 
 
 def find_neighbors(y: int, x: int, grid):
