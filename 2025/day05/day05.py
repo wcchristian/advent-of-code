@@ -31,10 +31,10 @@ def count_ranges(ranges):
     sorted_ranges = sorted(ranges, key = lambda x: x[0])
 
     for r in sorted_ranges:
-        if r[0] <= max_number and r[1] >= max_number: # straddle
+        if r[0] <= max_number and r[1] >= max_number:
             count += r[1] - max_number
             max_number = r[1]
-        elif  r[0] > max_number: # totally outside
+        elif  r[0] > max_number:
             count += r[1] - r[0] + 1
             max_number = r[1]
 
