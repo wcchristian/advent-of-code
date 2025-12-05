@@ -20,58 +20,26 @@ def part1(filename):
 
     return fresh_count
 
-# 868333791996222 too high
-# 322287238722640 is wrong
 def part2(filename):
     ranges, _ = read_file(filename)
-
-    # Consolidate ranges
-    consolidated_ranges = consolidate_ranges(ranges)
+    return count_ranges(ranges)
 
 
-    # sort ranges
-    # loop up, if overlap, combine them
+def count_ranges(ranges):
+    count = 0
+    max_number = 0
+    sorted_ranges = sorted(ranges, key = lambda x: x[0])
+
+    for r in sorted_ranges:
+        if r[0] <= max_number and r[1] >= max_number: # straddle
+            count += r[1] - max_number
+            max_number = r[1]
+        elif  r[0] > max_number: # totally outside
+            count += r[1] - r[0] + 1
+            max_number = r[1]
 
 
-    # Add up numbers in the range.
-
-    return sum([x[1] - x[0] + 1 for x in consolidate_ranges])
-
-    total = 0
-    for r in consolidated_ranges:
-        total += r[1] - r[0] + 1
-
-    return total
-
-
-def consolidate_ranges(ranges):
-    # sort
-    sorted(ranges, key = lambda x: x[0])
-    i = 0
-    mods = 0
-    while(i in range(len(ranges))):
-        prev_range = ranges[i-1] if i > 0 else None
-        current_range = ranges[i]
-
-        if prev_range != None and current_range[0] <= prev_range[1]:
-            ranges[i-1] = (prev_range[0], current_range[1])
-            del ranges[i]
-            mods += 1
-            continue
-        else:
-            i += 1
-
-    if mods == 0:
-        return ranges
-    else:
-        return consolidate_ranges(ranges)
-
-    print("What am I doing?")
-
-
-        # check the prev range if applicable
-        # if it's entirely out of bounds, move on
-        # if it's in bounds merge this to the prev and continue.
+    return count
 
 
 def is_in_range(ingredient, ranges):
