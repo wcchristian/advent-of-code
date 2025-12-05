@@ -5,9 +5,9 @@ def main():
     filename = "day05_input.txt"
     example_filename = "day05_example.txt"
 
-    #print(f'Part 1 Example: {part1(example_filename)}')
-    #print(f'Part 1: {part1(filename)}')
-    #print(f'Part 2 Example: {part2(example_filename)}')
+    print(f'Part 1 Example: {part1(example_filename)}')
+    print(f'Part 1: {part1(filename)}')
+    print(f'Part 2 Example: {part2(example_filename)}')
     print(f'Part 2: {part2(filename)}')
 
 
@@ -21,49 +21,57 @@ def part1(filename):
     return fresh_count
 
 # 868333791996222 too high
+# 322287238722640 is wrong
 def part2(filename):
     ranges, _ = read_file(filename)
-    sorted(ranges, key=lambda x: x[0])
-    filtered_ranges = [ranges[0]]
 
     # Consolidate ranges
-    filtered_ranges = consolodate_range_list(ranges)
+    consolidated_ranges = consolidate_ranges(ranges)
+
+
+    # sort ranges
+    # loop up, if overlap, combine them
+
 
     # Add up numbers in the range.
+
+    return sum([x[1] - x[0] + 1 for x in consolidate_ranges])
+
     total = 0
-    for r in filtered_ranges:
+    for r in consolidated_ranges:
         total += r[1] - r[0] + 1
 
     return total
 
 
-def consolodate_range_list(ranges):
-    filtered_ranges = [ranges[0]]
-    mod_count = 0
+def consolidate_ranges(ranges):
+    # sort
+    sorted(ranges, key = lambda x: x[0])
+    i = 0
+    mods = 0
+    while(i in range(len(ranges))):
+        prev_range = ranges[i-1] if i > 0 else None
+        current_range = ranges[i]
 
-    for a, b in ranges:
-        append_new = True
-        for i in range(len(filtered_ranges)):
-            x, y = filtered_ranges[i]
+        if prev_range != None and current_range[0] <= prev_range[1]:
+            ranges[i-1] = (prev_range[0], current_range[1])
+            del ranges[i]
+            mods += 1
+            continue
+        else:
+            i += 1
 
-            # if both within, break
-            if a >= x and b <= y:
-                append_new = False
-                break
-            #TODO, should I break this into multiple statements to be more explicit, should probablyt compare this against all cases we could see.
-            elif (a >= x and a < y) or (b <= y and b < x): # inbound to some degree
-                filtered_ranges[i] = (min(a, x), max(b, y))
-                append_new = False
-                mod_count += 1
-                break
-
-        if append_new:
-            filtered_ranges.append((a, b))
-
-    if mod_count > 0:
-        return consolodate_range_list(filtered_ranges)
+    if mods == 0:
+        return ranges
     else:
-        return filtered_ranges
+        return consolidate_ranges(ranges)
+
+    print("What am I doing?")
+
+
+        # check the prev range if applicable
+        # if it's entirely out of bounds, move on
+        # if it's in bounds merge this to the prev and continue.
 
 
 def is_in_range(ingredient, ranges):
