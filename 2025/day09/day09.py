@@ -28,17 +28,16 @@ def part1(filename):
 def part2(filename):
     coords = read_file(filename)
     print_grid(coords)
+    perimeter = build_perimeter(coords)
 
-    #TODO: Maybe has something to do with that I'm parsing y,x instead of x,y?
+    # areas = []
+    # for point in coords:
+    #     for other_point in coords:
+    #         if all_points_inside_perimeter(point, other_point, perimeter):
+    #             areas.append(find_rect_area_of_two_points(point, other_point))
 
-    areas = []
-    for point in coords:
-        for other_point in coords:
-            if all_points_inside_perimeter(point, other_point, coords):
-                areas.append(find_rect_area_of_two_points(point, other_point))
-
-    # return the largest area found
-    return max(areas)
+    # return max(areas)
+    return 1
 
 
 
@@ -48,32 +47,6 @@ def find_rect_area_of_two_points(p1, p2):
     width = abs(x2 - x1) + 1
     height = abs(y2 - y1) + 1
     return width * height
-
-
-def find_perimeter(coords):
-    stack = []
-
-    # Find lowest y point
-    lowest_point = min(coords, key=lambda x: x[1])
-    stack.append(lowest_point)
-    coords.remove(lowest_point)
-
-    # find angle from this point to all other points
-    coords = sorted(coords, key=lambda c: math.atan2(c[1] - lowest_point[1], c[0] - lowest_point[0]))
-
-    # for each point, determine if it makes a left or right turn
-    for point in coords:
-        while len(stack) >= 2:
-            p2 = stack[-1]
-            p1 = stack[-2]
-            cross_product = (p2[0] - p1[0]) * (point[1] - p1[1]) - (p2[1] - p1[1]) * (point[0] - p1[0])
-            if cross_product > 0:
-                break
-            else:
-                stack.pop()
-        stack.append(point)
-    
-    return stack
 
 
 def print_grid(coords):
@@ -88,37 +61,33 @@ def print_grid(coords):
     for row in grid:
         print(''.join(row))
 
-    
 
-def all_points_inside_perimeter(p1, p2, coords):
+def is_rect_inside_perimeter(p1, p2, perimeter):
     x1, y1 = p1
     x2, y2 = p2
 
-    # Get rectangle corners
-    rect_corners = [
-        (min(x1, x2), min(y1, y2)),
-        (min(x1, x2), max(y1, y2)),
-        (max(x1, x2), min(y1, y2)),
-        (max(x1, x2), max(y1, y2)),
+    corners = [
+        (x1, y1),
+        (x1, y2),
+        (x2, y1),
+        (x2, y2)
     ]
 
-    # Check if all corners are inside the perimeter
-    for corner in rect_corners:
-        if not is_point_inside_polygon(corner, coords):
+    for corner in corners:
+        if not is_point_inside_perimeter(corner, perimeter):
             return False
 
     return True
 
 
-# TODO: Fixme to be more simple.
-def is_point_inside_polygon(point, polygon):
+def is_point_inside_perimeter(point, perimeter):
     x, y = point
-    n = len(polygon)
     inside = False
 
-    p1x, p1y = polygon[0]
+    n = len(perimeter)
+    p1x, p1y = perimeter[0]
     for i in range(n + 1):
-        p2x, p2y = polygon[i % n]
+        p2x, p2y = perimeter[i % n]
         if y > min(p1y, p2y):
             if y <= max(p1y, p2y):
                 if x <= max(p1x, p2x):
@@ -130,6 +99,28 @@ def is_point_inside_polygon(point, polygon):
 
     return inside
 
+
+def build_perimeter(coords):
+
+    perimeter = []
+
+    for i in range(len(coords)):
+        p1 = coords[i]
+        p2 = coords[i+1] if i < len(coords) - 1 else coords[0]
+
+        x = p2[0] - p1[0]
+        y = p2[1] - p1[1]
+
+        if x != 0:
+            step = 1 if x > 0 else -1
+            for xi in range(p1[0], p2[0] + step, step):
+                perimeter.append((xi, p1[1]))
+        elif y != 0:
+            step = 1 if y > 0 else -1
+            for yi in range(p1[1], p2[1] + step, step):
+                perimeter.append((p1[0], yi))
+
+    return perimeter
 
 
 # Read the file in this directory given a file name
