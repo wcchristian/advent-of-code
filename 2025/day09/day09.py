@@ -24,14 +24,15 @@ def part1(filename):
 
     return max(areas)
 
-# too high 4601733120
+# previous attempt returned 4601733120 (too high)
 def part2(filename):
     coords = read_file(filename)
+    segments = build_perimeter_segments(coords)
 
     areas = []
     for point in coords:
         for other_point in coords:
-            if is_rect_inside_perimeter(point, other_point, coords):
+            if is_rect_inside_perimeter(point, other_point, coords, segments):
                 areas.append(find_rect_area_of_two_points(point, other_point))
 
     return max(areas)
@@ -45,7 +46,7 @@ def find_rect_area_of_two_points(p1, p2):
     return width * height
 
 
-def is_rect_inside_perimeter(p1, p2, perimeter):
+def is_rect_inside_perimeter(p1, p2, perimeter, segments):
     x1, y1 = p1
     x2, y2 = p2
 
@@ -60,89 +61,71 @@ def is_rect_inside_perimeter(p1, p2, perimeter):
         if not is_point_inside_perimeter_two(corner, perimeter):
             return False
 
+    min_x, max_x = sorted((x1, x2))
+    min_y, max_y = sorted((y1, y2))
+
+    # Reject rectangles whose vertical edges cross the loop.
+    for y, low_x, high_x in segments["h"]:
+        if min_y < y < max_y:
+            if max(low_x, min_x) < min(high_x, max_x):
+                return False
+
+    # Reject rectangles whose horizontal edges cross the loop.
+    for x, low_y, high_y in segments["v"]:
+        if min_x < x < max_x:
+            if max(low_y, min_y) < min(high_y, max_y):
+                return False
+
     return True
 
 
-def is_point_inside_perimeter(point, perimeter):
-    x, y = point
-    intersections = 0
-    for i in range(len(perimeter)):
-        p1 = perimeter[i]
-        p2 = perimeter[(i+1) % len(perimeter)]
-        
-        # Check if point is on the edge
-        if p1[1] == p2[1]:  # horizontal line
-            if y == p1[1] and min(p1[0], p2[0]) <= x <= max(p1[0], p2[0]):
-                return True
-        elif p1[0] == p2[0]:  # vertical line
-            if x == p1[0] and min(p1[1], p2[1]) <= y <= max(p1[1], p2[1]):
-                return True
-        
-        # Ray casting - count intersections with edges crossing the ray
-        y1, y2 = p1[1], p2[1]
-        x1, x2 = p1[0], p2[0]
-        
-        if y1 > y2:
-            y1, y2, x1, x2 = y2, y1, x2, x1
-        
-        # Check if ray at y intersects with edge
-        if y1 < y <= y2:
-            x_intersect = x1 + (y - y1) * (x2 - x1) / (y2 - y1)
-            if x < x_intersect:
-                intersections += 1
-    
-    return intersections % 2 == 1
+def build_perimeter_segments(perimeter):
+    horizontal = []
+    vertical = []
+
+    n = len(perimeter)
+    for i in range(n):
+        x1, y1 = perimeter[i]
+        x2, y2 = perimeter[(i + 1) % n]
+
+        if x1 == x2:
+            low_y, high_y = sorted((y1, y2))
+            vertical.append((x1, low_y, high_y))
+        else:
+            low_x, high_x = sorted((x1, x2))
+            horizontal.append((y1, low_x, high_x))
+
+    return {"h": horizontal, "v": vertical}
 
 
 def is_point_inside_perimeter_two(point, perimeter):
-    """
-    Check if a point is inside or on the perimeter formed by red tiles.
-    The perimeter includes:
-    - The red tiles themselves
-    - Green tiles on straight lines between consecutive red tiles
-    - Green tiles inside the closed loop
-    """
-    x, y = point
-    
-    # First check if point is on a red tile
-    if point in perimeter:
+    """Return True when the point is on or inside the red/green loop."""
+    px, py = point
+
+    red_tiles = set(perimeter)
+    if point in red_tiles:
         return True
-    
-    # Check if point is on a green tile (on the edge between consecutive red tiles)
-    for i in range(len(perimeter)):
-        p1 = perimeter[i]
-        p2 = perimeter[(i + 1) % len(perimeter)]
-        
-        # Check if point lies on the line segment between p1 and p2
-        if p1[0] == p2[0]:  # Vertical line
-            if x == p1[0] and min(p1[1], p2[1]) <= y <= max(p1[1], p2[1]):
-                return True
-        elif p1[1] == p2[1]:  # Horizontal line
-            if y == p1[1] and min(p1[0], p2[0]) <= x <= max(p1[0], p2[0]):
-                return True
-    
-    # Use ray casting to check if point is inside the polygon
-    # Cast a ray from point to the right and count intersections
-    count = 0
+
+    intersections = 0
     n = len(perimeter)
-    
+
     for i in range(n):
-        p1 = perimeter[i]
-        p2 = perimeter[(i + 1) % n]
-        
-        y1, y2 = p1[1], p2[1]
-        x1, x2 = p1[0], p2[0]
-        
-        # Check if the edge crosses the horizontal ray from point
-        if min(y1, y2) < y <= max(y1, y2):
-            # Calculate x coordinate of intersection
-            if y1 != y2:  # Avoid division by zero
-                x_intersect = x1 + (y - y1) * (x2 - x1) / (y2 - y1)
-                if x < x_intersect:
-                    count += 1
-    
-    # Point is inside if count is odd
-    return count % 2 == 1
+        x1, y1 = perimeter[i]
+        x2, y2 = perimeter[(i + 1) % n]
+
+        # The puzzle guarantees axis-aligned step segments.
+        if x1 == x2:
+            low_y, high_y = sorted((y1, y2))
+            if px == x1 and low_y <= py <= high_y:
+                return True
+            if px < x1 and low_y <= py < high_y:
+                intersections += 1
+        elif y1 == y2:
+            low_x, high_x = sorted((x1, x2))
+            if py == y1 and low_x <= px <= high_x:
+                return True
+
+    return intersections % 2 == 1
 
 
 # Read the file in this directory given a file name
