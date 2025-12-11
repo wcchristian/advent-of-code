@@ -23,6 +23,8 @@ def part1(filename):
 # Most of the code in the below find_min_button_presses_for_joltages function
 # is ai generated, with comments. Spent some time after generation learning
 # how this worked. Definitely a tool I will have to use in future years.
+# TODO: I should revisit this and try and use linear equations and Gaussian elimination to try and solve without
+# the library. Gaussian Elimination.
 def part2(filename):
     lines = read_file(filename)
     return sum([find_min_button_presses_for_joltages(line) for line in lines])
