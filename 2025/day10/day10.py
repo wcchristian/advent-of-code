@@ -20,6 +20,9 @@ def part1(filename):
 
 # Gave up on this one and looked up some solutions on reddit.
 # found a hint to use a solver like z3 so gave that a shot.
+# Most of the code in the below find_min_button_presses_for_joltages function
+# is ai generated, with comments. Spent some time after generation learning
+# how this worked. Definitely a tool I will have to use in future years.
 def part2(filename):
     lines = read_file(filename)
     return sum([find_min_button_presses_for_joltages(line) for line in lines])
@@ -55,24 +58,33 @@ def find_min_button_presses(line):
 
 
 def find_min_button_presses_for_joltages(line):
+    # Parse this machine's configuration into buttons and target joltages.
     _, buttons, joltages = parse_line(line)
 
+    # Create an optimization context that can both constrain and minimize.
     opt = Optimize()
+    # One integer decision variable per button counting how many times it is pressed.
     presses = [Int(f"press_{idx}") for idx in range(len(buttons))]
 
+    # Constrain every button press count to be non-negative.
     for press in presses:
         opt.add(press >= 0)
 
+    # Constrain each counter so its button contributions add up to the target joltage.
     for counter_idx, joltage in enumerate(joltages):
+        # Collect the press variables for buttons wired to this counter.
         contributions = [presses[idx] for idx, button in enumerate(buttons) if counter_idx in button]
+        # Sum those contributions, or treat it as zero if no button touches the counter.
         expression = Sum(contributions) if contributions else 0
+        # Force the summed presses to match the required joltage for this counter.
         opt.add(expression == joltage)
 
+    # Ask Z3 to minimize the total number of button presses across all variables.
     opt.minimize(Sum(presses))
-    if opt.check() != sat:
-        return None
 
+    # Extract the optimal solution that meets every constraint.
     model = opt.model()
+    # Add up each button's press count from the model so we can return the total cost.
     return sum(model[press].as_long() for press in presses)
 
 
