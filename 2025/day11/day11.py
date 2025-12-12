@@ -1,5 +1,7 @@
 from pathlib import Path
+from functools import cache
 
+device_dict = None
 
 def main():
     filename = "day11_input.txt"
@@ -12,60 +14,30 @@ def main():
 
 
 def part1(filename):
+    global device_dict
     device_dict = read_file(filename)
-    return count_paths(device_dict, 'you')
+    count.cache_clear()
+    return count('you', 'out')
 
 
 def part2(filename):
+    global device_dict
     device_dict = read_file(filename)
-    #NOTE: This line will explode your memory paths = collect_paths(device_dict, 'svr')
-    return count_paths2(device_dict, 'svr', req_devices={'dac': False, 'fft': False})
+    count.cache_clear()
+
+    p2  = count("svr", "fft") * count("fft", "dac") * count("dac", "out")
+    p2 += count("svr", "dac") * count("dac", "fft") * count("fft", "out")
+
+    return p2
 
 
-# Initially tried to cache like the beam splitting problem but in this case since there are cycles
-# that would end up not counting all paths, just the first one it found for a node.
-# Funnily enough that was giving me the same answer as the example part 1.
-def count_paths(device_dict, current_device):
-    if current_device == 'out':
+@cache
+def count(start, end):
+    if start == end:
         return 1
-
-    total_paths = 0
-    outputs = device_dict[current_device]
-    for output in outputs:
-        total_paths += count_paths(device_dict, output)
-
-    return total_paths
-
-
-def collect_paths(device_dict, current_device, current_path=[], paths=[]):
-    current_path.append(current_device)
-
-    if current_device == 'out':
-        paths.append(current_path)
-        current_path = []
-        return paths
-
-    outputs = device_dict[current_device]
-    for output in outputs:
-        paths.extend(collect_paths(device_dict, output, current_path, paths))
-
-    return paths
-
-
-def count_paths2(device_dict, current_device, req_devices=None):
-
-    if req_devices and current_device in req_devices.keys():
-        req_devices[current_device] = True
-
-    if current_device == 'out':
-        return 1 if all(list(req_devices.values())) else 0
-
-    total_paths = 0
-    outputs = device_dict[current_device]
-    for output in outputs:
-        total_paths += count_paths2(device_dict, output, req_devices)
-
-    return total_paths
+    else:
+        next = [count(next, end) for next in device_dict.get(start, [])]
+        return sum(next)
 
 
 # Read the file in this directory given a file name
@@ -84,7 +56,6 @@ def read_file(filename):
 
 
     return device_dict
-
 
 
 if __name__ == "__main__":
